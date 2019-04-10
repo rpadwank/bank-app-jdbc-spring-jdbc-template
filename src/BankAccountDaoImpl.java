@@ -27,7 +27,7 @@ public class BankAccountDaoImpl implements BankAccountDao {
 	}
 	
 	@Override
-	public double getBalance(long accountId) {
+	public double getBalance(long accountId) throws AccountNotFoundException {
 		Double balance = -1.0;
 		String query = "SELECT account_balance FROM bankaccounts WHERE account_id = ?";
 		Object[] params = {accountId};
@@ -35,6 +35,7 @@ public class BankAccountDaoImpl implements BankAccountDao {
 			balance = jdbcTemplate.queryForObject(query, params, Double.class);
 		}
 		catch(Exception e){
+			throw new AccountNotFoundException("account doesn't exist");
 		}
 		
 		return balance;
@@ -48,6 +49,7 @@ public class BankAccountDaoImpl implements BankAccountDao {
 			int result = jdbcTemplate.update(query, params);
 			System.out.println("No. of rows updated: " + result);
 		}catch(Exception e){
+			throw new AccountNotFoundException("account doesn't exist");
 		}
 
 	}
@@ -61,6 +63,7 @@ public class BankAccountDaoImpl implements BankAccountDao {
 			if(result==1)
 				return true;
 		}catch(Exception e){
+			throw new AccountNotFoundException("account doesn't exist");
 		}	
 		
 		return false;
@@ -107,6 +110,7 @@ public class BankAccountDaoImpl implements BankAccountDao {
 				});
 		}
 		catch(Exception e){
+			throw new AccountNotFoundException("account doesn't exist");
 		}
 		return account;
 	}
@@ -123,6 +127,7 @@ public class BankAccountDaoImpl implements BankAccountDao {
 				return true;
 			}
 		}catch(Exception e){
+			throw new AccountNotFoundException("account doesn't exist");
 		}
 		return false;
 	}

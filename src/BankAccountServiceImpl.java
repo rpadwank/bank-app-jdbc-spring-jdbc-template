@@ -92,7 +92,6 @@ public class BankAccountServiceImpl implements BankAccountService {
 		try {
 			newBalance = withdrawForFundTransfer(fromAccount, amount);
 			deposit(toAccount, amount);
-			
 			return newBalance;
 		} catch (LowBalanceException | AccountNotFoundException e) {
 			logger.error("Exception: ", e);
