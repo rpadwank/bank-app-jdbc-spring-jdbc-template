@@ -13,7 +13,7 @@ import com.capgemini.bankapp.service.BankAccountService;
 import org.springframework.transaction.annotation.*;
 import com.mysql.jdbc.Connection;
 
-@Transactional
+
 public class BankAccountServiceImpl implements BankAccountService {
 
 
@@ -45,26 +45,12 @@ public class BankAccountServiceImpl implements BankAccountService {
 			throw new LowBalanceException("You have insufficient fund...");
 		return balance;
 	}
-	
-	private double withdrawForFundTransfer(long fromAccount, double amount) throws AccountNotFoundException, LowBalanceException {
-		double balance = bankAccountDao.getBalance(fromAccount);
-		if (balance < 0)
-			throw new AccountNotFoundException("Bank account does not exist");
-		else if (balance - amount >= 0) {
-			balance = balance - amount;
-			bankAccountDao.updateBalance(fromAccount, balance);
-		} else
-			throw new LowBalanceException("You have insufficient fund...");
-		return balance;
-	}
 
 	@Override
 	public double deposit(long accountId, double amount) throws AccountNotFoundException {
 		double balance=0;
-		try{
-			balance = bankAccountDao.getBalance(accountId);
-		}
-		catch(Exception e){
+		balance = bankAccountDao.getBalance(accountId);
+		if(balance<0){
 			throw new AccountNotFoundException("Account doesn't exist");
 		}
 		balance = balance + amount;
@@ -90,7 +76,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 			throws LowBalanceException, AccountNotFoundException {
 		double newBalance = 0;
 		try {
-			newBalance = withdrawForFundTransfer(fromAccount, amount);
+			newBalance = withdraw(fromAccount, amount);
 			deposit(toAccount, amount);
 			return newBalance;
 		} catch (LowBalanceException | AccountNotFoundException e) {
@@ -123,6 +109,8 @@ public class BankAccountServiceImpl implements BankAccountService {
 	@Override
 	public boolean updateAccountDetails(BankAccount account) throws AccountNotFoundException {
 		boolean result = bankAccountDao.updateAccountDetails(account);
+		if(!result)
+			throw new AccountNotFoundException("Account doesn't exist");
 		return result;
 	}
 

@@ -16,7 +16,6 @@ import com.capgemini.bankapp.util.DbUtil;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.transaction.annotation.*;
 
-@Transactional
 public class BankAccountDaoImpl implements BankAccountDao {
 
 	Logger logger = Logger.getLogger(BankAccountDaoImpl.class);
@@ -27,7 +26,7 @@ public class BankAccountDaoImpl implements BankAccountDao {
 	}
 	
 	@Override
-	public double getBalance(long accountId) throws AccountNotFoundException {
+	public double getBalance(long accountId) {
 		Double balance = -1.0;
 		String query = "SELECT account_balance FROM bankaccounts WHERE account_id = ?";
 		Object[] params = {accountId};
@@ -35,27 +34,25 @@ public class BankAccountDaoImpl implements BankAccountDao {
 			balance = jdbcTemplate.queryForObject(query, params, Double.class);
 		}
 		catch(Exception e){
-			throw new AccountNotFoundException("account doesn't exist");
 		}
 		
 		return balance;
 	}
 
 	@Override
-	public void updateBalance(long accountId, double newBalance) throws AccountNotFoundException {
+	public void updateBalance(long accountId, double newBalance){
 		String query = "UPDATE bankaccounts SET account_balance = ? WHERE account_id = ?";
 		Object[] params = {newBalance, accountId};
 		try{
 			int result = jdbcTemplate.update(query, params);
 			System.out.println("No. of rows updated: " + result);
 		}catch(Exception e){
-			throw new AccountNotFoundException("account doesn't exist");
 		}
 
 	}
 
 	@Override
-	public boolean deleteBankAccount(long accountId) throws AccountNotFoundException {
+	public boolean deleteBankAccount(long accountId){
 		String query = "DELETE FROM bankaccounts WHERE account_id = ?";
 		Object[] params = {accountId};
 		try{
@@ -63,7 +60,6 @@ public class BankAccountDaoImpl implements BankAccountDao {
 			if(result==1)
 				return true;
 		}catch(Exception e){
-			throw new AccountNotFoundException("account doesn't exist");
 		}	
 		
 		return false;
@@ -84,12 +80,7 @@ public class BankAccountDaoImpl implements BankAccountDao {
 	public List<BankAccount> findAllBankAccounts() {
 		String query = "SELECT * FROM bankaccounts";
 		List<BankAccount> accounts = jdbcTemplate.query(query, (rs, rowNum)->{
-				long accountId = rs.getLong(1);
-				String accountHolderName = rs.getString(2);
-				String accountType = rs.getString(3);
-				double accountBalance = rs.getDouble(4);
-				BankAccount account = new BankAccount(accountId, accountHolderName, accountType, accountBalance);
-				return account;
+				return getAccount(rs);
 				});
 
 		return accounts;
@@ -102,21 +93,16 @@ public class BankAccountDaoImpl implements BankAccountDao {
 		BankAccount account = null;
 		try{
 		account = jdbcTemplate.queryForObject(query, params, (rs, rowNum)->{
-				String accountHolderName = rs.getString(2);
-				String accountType = rs.getString(3);
-				double accountBalance = rs.getDouble(4);
-				BankAccount accounts = new BankAccount(accountId, accountHolderName, accountType, accountBalance);
-				return accounts;
+				return getAccount(rs);
 				});
 		}
 		catch(Exception e){
-			throw new AccountNotFoundException("account doesn't exist");
 		}
 		return account;
 	}
 
 	@Override
-	public boolean updateAccountDetails(BankAccount account) throws AccountNotFoundException {
+	public boolean updateAccountDetails(BankAccount account) {
 		String query = "UPDATE bankaccounts SET customer_name = ?, account_type = ? WHERE account_id = ?";
 		Object[] params = {account.getAccountHolderName(), account.getAccountType(), account.getAccountId()};
 		try{
@@ -127,10 +113,17 @@ public class BankAccountDaoImpl implements BankAccountDao {
 				return true;
 			}
 		}catch(Exception e){
-			throw new AccountNotFoundException("account doesn't exist");
 		}
 		return false;
 	}
 
+	public BankAccount getAccount(ResultSet rs)throws SQLException{
+		long accountId = rs.getLong(1);
+		String accountHolderName = rs.getString(2);
+		String accountType = rs.getString(3);
+		double accountBalance = rs.getDouble(4);
+		BankAccount accounts = new BankAccount(accountId, accountHolderName, accountType, accountBalance);
+		return accounts;
+	}
 	
 }
